@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Goals{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Create New Goal</h3>
+                <form onsubmit="return createGoal(this)">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Goal Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="target_amount" class="form-label">Target Amount</label>
+                        <input type="number" class="form-control" id="target_amount" name="target_amount" required min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label for="current_amount" class="form-label">Current Amount (Optional)</label>
+                        <input type="number" class="form-control" id="current_amount" name="current_amount" min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label for="target_date" class="form-label">Target Date</label>
+                        <input type="date" class="form-control" id="target_date" name="target_date" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Goal</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Your Goals</h3>
+                {% for goal in goals %}
+                <div class="goal-card mb-4">
+                    <h4>{{ goal.name }}</h4>
+                    <div class="progress goal-progress mb-2">
+                        <div class="progress-bar" role="progressbar" 
+                             style="width: {{ (goal.current_amount / goal.target_amount * 100)|round }}%">
+                            {{ (goal.current_amount / goal.target_amount * 100)|round }}%
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <small>Current: ₹{{ "%.2f"|format(goal.current_amount) }}</small>
+                        </div>
+                        <div class="col text-end">
+                            <small>Target: ₹{{ "%.2f"|format(goal.target_amount) }}</small>
+                        </div>
+                    </div>
+                    <small class="text-muted">Target Date: {{ goal.target_date.strftime('%Y-%m-%d') }}</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

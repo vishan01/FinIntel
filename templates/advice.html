@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Financial Advice{% endblock %}
+
+{% block content %}
+<div class="advice-section">
+    <h2 class="mb-4">Financial Learning Hub</h2>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h3 class="card-title">Quick Topics</h3>
+                    <div class="mb-3">
+                        <label for="topic" class="form-label">What would you like to learn about?</label>
+                        <select class="form-control" id="topic" onchange="getFinancialAdvice(this.value)">
+                            <option value="budgeting basics">Budgeting Basics</option>
+                            <option value="investment strategies">Investment Strategies</option>
+                            <option value="debt management">Debt Management</option>
+                            <option value="retirement planning">Retirement Planning</option>
+                            <option value="tax saving">Tax Saving</option>
+                            <option value="emergency fund">Emergency Fund</option>
+                        </select>
+                    </div>
+                    <div id="advice-content" class="mt-3">
+                        Select a topic to get personalized financial advice...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title">Chat with FinIntel AI</h3>
+                    <div id="chat-messages" class="chat-messages mb-3" style="height: 300px; overflow-y: auto;">
+                    </div>
+                    <form id="chat-form" onsubmit="return sendMessage(event)">
+                        <div class="input-group">
+                            <input type="text" id="message-input" class="form-control" placeholder="Ask anything about finance...">
+                            <button type="submit" class="btn btn-primary">Send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.chat-messages {
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+.message {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+.user-message {
+    background-color: #e9ecef;
+    margin-left: 20%;
+}
+.ai-message {
+    background-color: #f8f9fa;
+    margin-right: 20%;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    getFinancialAdvice('budgeting basics');
+});
+
+async function sendMessage(event) {
+    event.preventDefault();
+    const input = document.getElementById('message-input');
+    const message = input.value.trim();
+    if (!message) return;
+
+    // Add user message to chat
+    addMessageToChat(message, 'user');
+    input.value = '';
+
+    try {
+        const response = await fetch(`/finance/chat?message=${encodeURIComponent(message)}`);
+        const data = await response.json();
+        addMessageToChat(data.response, 'ai');
+    } catch (error) {
+        console.error('Error:', error);
+        addMessageToChat('Sorry, there was an error processing your request.', 'ai');
+    }
+}
+
+function addMessageToChat(message, type) {
+    const chatMessages = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}-message`;
+    messageDiv.textContent = message;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Welcome to FinIntel</h1>
+    <p>Your personal finance management solution</p>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Market Overview</h5>
+                </div>
+                <div class="card-body" id="market-data">
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/finance/market-data')
+        .then(response => response.json())
+        .then(data => {
+            const marketDataDiv = document.getElementById('market-data');
+            if (data.error) {
+                marketDataDiv.innerHTML = `<div class="alert alert-warning">${data.error}</div>`;
+                return;
+            }
+            
+            if (data.nifty50) {
+                const nifty = data.nifty50;
+                const changeClass = parseFloat(nifty.change) >= 0 ? 'text-success' : 'text-danger';
+                marketDataDiv.innerHTML = `
+                    <h3>NIFTY 50</h3>
+                    <h4>₹${nifty.price.toLocaleString()}</h4>
+                    <p class="${changeClass}">
+                        ${nifty.change >= 0 ? '↑' : '↓'} ${Math.abs(nifty.change).toFixed(2)} (${nifty.change_percent})
+                    </p>
+                    <small class="text-muted">Last updated: ${nifty.last_updated}</small>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching market data:', error);
+            document.getElementById('market-data').innerHTML = 
+                '<div class="alert alert-danger">Error loading market data</div>';
+        });
+});
+</script>
+{% endblock %}

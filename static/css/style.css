@@ -1,0 +1,72 @@
+.card {
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.chart-container {
+    min-height: 450px;
+    margin-bottom: 2rem;
+    width: 100%;
+    position: relative;
+    background-color: #fff;
+    border-radius: 0.25rem;
+    padding: 1rem;
+}
+
+#expense-chart {
+    width: 100% !important;
+    height: 450px !important;
+}
+
+.goal-progress {
+    height: 2rem;
+}
+
+.expense-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.btn-sm {
+    margin: 0 2px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.advice-section {
+    background-color: #f8f9fa;
+    padding: 2rem;
+    border-radius: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.sip-calculator {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    padding: 1.5rem;
+    text-align: center;
+    background: white;
+    border-radius: 0.5rem;
+}
+
+.stat-card h3 {
+    color: #0d6efd;
+    margin-bottom: 0.5rem;
+}

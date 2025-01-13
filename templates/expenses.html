@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Expense Tracker{% endblock %}
+
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{% if alerts %}
+<div class="alerts-section mb-4">
+    {% for alert in alerts %}
+    <div class="alert alert-{{ alert.severity }} alert-dismissible fade show" role="alert">
+        {{ alert.message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Add Expense</h3>
+                <form class="expense-form" onsubmit="return addExpense(this)">
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Amount</label>
+                        <input type="number" class="form-control" id="amount" name="amount" required min="0" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Category</label>
+                        <div class="input-group">
+                            <select class="form-control" id="category" name="category" required onchange="handleCategoryChange(this)">
+                                <option value="Food">Food</option>
+                                <option value="Transportation">Transportation</option>
+                                <option value="Entertainment">Entertainment</option>
+                                <option value="Utilities">Utilities</option>
+                                <option value="Shopping">Shopping</option>
+                                <option value="custom">Add Custom Category</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                        <div id="custom-category-input" class="mb-3" style="display: none;">
+                            <input type="text" class="form-control" id="custom-category" placeholder="Enter custom category">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="description" name="description">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Expense</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title">Expense Analysis</h3>
+                <div class="card-body">
+                    <h3 class="card-title">Expense Analysis</h3>
+                    <div class="chart-container mb-4">
+                        <div id="expense-chart" style="width: 100%; height: 450px;"></div>
+                    </div>
+                    <div class="expense-summary mt-4">
+                    <h4>Recent Expenses</h4>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in expenses %}
+                                <tr>
+                                    <td>{{ expense.date.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ expense.category }}</td>
+                                    <td>₹{{ "%.2f"|format(expense.amount) }}</td>
+                                    <td>{{ expense.description }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-primary" onclick="editExpense({{ expense.id }}, '{{ expense.category }}', {{ expense.amount }}, '{{ expense.description }}')">
+                                            Edit
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteExpense({{ expense.id }})">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+window.addEventListener('load', function() {
+    const chartContainer = document.getElementById('expense-chart');
+    if (chartContainer) {
+        fetch('/finance/expenses/analysis')
+            .then(response => response.json())
+            .then(data => {
+                if (!data || !data.breakdown) {
+                    chartContainer.innerHTML = '<div class="alert alert-info">No expense data available</div>';
+                    return;
+                }
+                createExpenseChart(data);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                chartContainer.innerHTML = '<div class="alert alert-danger">Error loading expense chart</div>';
+            });
+    }
+});
+</script>
+{% endblock %}
