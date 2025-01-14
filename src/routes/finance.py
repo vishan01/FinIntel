@@ -6,11 +6,19 @@ from src.services.financial import FinancialService
 from src.services.market_data import MarketDataService
 from src.services.budget_alert import BudgetAlertService
 
+# Initialize globals before blueprint creation
+financial_service = None
+market_service = None
+
+def init_services(fin_service, mkt_service):
+    global financial_service, market_service
+    financial_service = fin_service
+    market_service = mkt_service
+
 finance_bp = Blueprint('finance', __name__)
-financial_service = FinancialService()
-market_service = MarketDataService()
 
 @finance_bp.route('/sip-calculator', methods=['GET', 'POST'])
+@login_required
 def calculate_sip():
     if request.method == 'GET':
         return render_template('sip_calculator.html')
@@ -31,7 +39,7 @@ def add_expense():
         amount=float(data['amount']),
         category=data['category'],
         description=data.get('description', ''),
-        date=datetime.now(),
+        date=datetime.strptime(data['date'], '%Y-%m-%d'),
         user_id=current_user.id
     )
     db.session.add(expense)
@@ -44,6 +52,7 @@ def update_expense(expense_id):
     expense = Expense.query.filter_by(id=expense_id, user_id=current_user.id).first_or_404()
     data = request.get_json()
     
+    expense.date = datetime.strptime(data['date'], '%Y-%m-%d')
     expense.amount = float(data['amount'])
     expense.category = data['category']
     expense.description = data.get('description', '')
@@ -82,14 +91,41 @@ def expenses():
 @finance_bp.route('/expenses/analysis')
 @login_required
 def analyze_expenses():
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        expenses = Expense.query.filter_by(user_id=current_user.id).all()
-        analysis = financial_service.analyze_expenses(expenses)
-        print("Analysis data:", analysis)  # Debug print
-        return jsonify(analysis)
-    return render_template('expenses.html')
+    expenses = Expense.query.filter_by(user_id=current_user.id).order_by(Expense.date.asc()).all()
+    analysis = financial_service.analyze_expenses(expenses)
+    
+    # Add monthly trend data
+    monthly_data = {}
+    
+    # Get all expenses from the last 12 months
+    from datetime import datetime, timedelta
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=365)
+    
+    # Initialize all months with 0
+    current = start_date
+    while current <= end_date:
+        month_key = current.strftime('%Y-%m')
+        monthly_data[month_key] = 0
+        current = (current.replace(day=1) + timedelta(days=32)).replace(day=1)
+    
+    # Fill in actual expense data
+    for expense in expenses:
+        if start_date <= expense.date <= end_date:
+            month_key = expense.date.strftime('%Y-%m')
+            monthly_data[month_key] = monthly_data.get(month_key, 0) + expense.amount
+    
+    analysis['monthly_trend'] = [
+        {
+            'month': datetime.strptime(month, '%Y-%m').strftime('%b %Y'),
+            'amount': amount
+        }
+        for month, amount in sorted(monthly_data.items())
+    ]
+    
+    return jsonify(analysis)
 
-@finance_bp.route('/goals', methods=['POST'])
+@finance_bp.route('/goals', methods=['POST', 'PUT'])
 @login_required
 def create_goal():
     data = request.get_json()
@@ -115,6 +151,38 @@ def create_goal():
         'savings_plan': savings_plan
     })
 
+@finance_bp.route('/goals/<int:goal_id>', methods=['PUT'])
+@login_required
+def update_goal(goal_id):
+    goal = Goal.query.filter_by(id=goal_id, user_id=current_user.id).first_or_404()
+    data = request.get_json()
+    
+    goal.name = data['name']
+    goal.target_amount = float(data['target_amount'])
+    goal.current_amount = float(data.get('current_amount', 0))
+    goal.target_date = datetime.strptime(data['target_date'], '%Y-%m-%d')
+    
+    db.session.commit()
+    
+    savings_plan = financial_service.calculate_goal_savings(
+        goal.target_amount,
+        goal.target_date,
+        goal.current_amount
+    )
+    
+    return jsonify({
+        'message': 'Goal updated successfully',
+        'savings_plan': savings_plan
+    })
+
+@finance_bp.route('/goals/<int:goal_id>', methods=['DELETE'])
+@login_required
+def delete_goal(goal_id):
+    goal = Goal.query.filter_by(id=goal_id, user_id=current_user.id).first_or_404()
+    db.session.delete(goal)
+    db.session.commit()
+    return jsonify({'message': 'Goal deleted successfully'})
+
 @finance_bp.route('/goals')
 @login_required
 def goals():
@@ -122,24 +190,28 @@ def goals():
     return render_template('goals.html', goals=user_goals)
 
 @finance_bp.route('/advice')
-async def get_advice():
+@login_required
+def get_advice():
     topic = request.args.get('topic', 'personal finance basics')
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         try:
-            advice = await financial_service.get_financial_advice(topic)
-            return jsonify({'advice': advice})
+            advice_response = financial_service.get_financial_advice(topic)
+            return jsonify(advice_response)
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     return render_template('advice.html')
 
 @finance_bp.route('/chat')
-async def chat():
+@login_required
+def chat():
     message = request.args.get('message', '')
+    print(message)
     if not message:
         return jsonify({'error': 'No message provided'}), 400
     
     try:
-        response = await financial_service.get_financial_advice(message)
+        response = financial_service.Chat(message)
         return jsonify({'response': response})
     except Exception as e:
+        print(e)
         return jsonify({'error': str(e)}), 500

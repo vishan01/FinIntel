@@ -4,29 +4,91 @@
 
 {% block content %}
 <div class="container">
-    <h1>Welcome to FinIntel</h1>
-    <p>Your personal finance management solution</p>
+    <div class="row mb-5">
+        <div class="col-md-8 offset-md-2 text-center">
+            <h1 class="display-4 mb-4">Welcome to FinIntel</h1>
+            <p class="lead">Your personal finance management and investment planning solution</p>
+            {% if not current_user.is_authenticated %}
+                <div class="mt-4">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary me-3">Login</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary">Register</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
 
     <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">Market Overview</h5>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">SIP Calculator</h5>
+                    <p class="card-text">Calculate your Systematic Investment Plan returns and plan your investments better.</p>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('finance.calculate_sip') }}" class="btn btn-primary">Try Calculator</a>
+                    {% endif %}
                 </div>
-                <div class="card-body" id="market-data">
-                    <div class="d-flex justify-content-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Expense Tracking</h5>
+                    <p class="card-text">Track your daily expenses, set budgets, and get insights into your spending patterns.</p>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('finance.expenses') }}" class="btn btn-primary">Manage Expenses</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Financial Goals</h5>
+                    <p class="card-text">Set and track your financial goals with personalized savings plans.</p>
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('finance.goals') }}" class="btn btn-primary">Set Goals</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+
+    {% if current_user.is_authenticated %}
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Market Overview</h5>
+                    </div>
+                    <div class="card-body" id="market-data">
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">AI Financial Advisor</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Get personalized financial advice powered by AI.</p>
+                        <a href="{{ url_for('finance.get_advice') }}" class="btn btn-primary">Get Advice</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
 
 {% block scripts %}
+{% if current_user.is_authenticated %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     fetch('/finance/market-data')
@@ -58,4 +120,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 });
 </script>
+{% endif %}
 {% endblock %}

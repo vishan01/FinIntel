@@ -23,10 +23,119 @@ function calculateSIP() {
     })
     .catch(error => console.error('Error:', error));
 }
+function createExpenseTrendChart(monthlyData) {
+    console.log('Creating trend chart with monthly data:', monthlyData);
+    const months = monthlyData.map(d => d.month);
+    const amounts = monthlyData.map(d => d.amount);
 
+    // Calculate moving average for trend line
+    const movingAverage = [];
+    const period = 3; // 3-month moving average
+    
+    for (let i = 0; i < amounts.length; i++) {
+        if (i < period - 1) {
+            movingAverage.push(null);
+            continue;
+        }
+        
+        let sum = 0;
+        for (let j = 0; j < period; j++) {
+            sum += amounts[i - j];
+        }
+        movingAverage.push(sum / period);
+    }
+
+    const traces = [
+        {
+            x: dates,
+            y: amounts,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Monthly Expenses',
+            line: {
+                color: '#0d6efd',
+                width: 2
+            },
+            marker: {
+                size: 8,
+                color: '#0d6efd'
+            },
+            hovertemplate: 'Month: %{x}<br>Amount: ₹%{y:.2f}<extra></extra>'
+        },
+        {
+            x: months,
+            y: movingAverage,
+            type: 'scatter',
+            mode: 'lines',
+            name: '3-Month Trend',
+            line: {
+                color: '#dc3545',
+                width: 2,
+                dash: 'dot'
+            },
+            hovertemplate: 'Month: %{x}<br>Trend: ₹%{y:.2f}<extra></extra>'
+        }
+    ];
+
+    const layout = {
+        height: 400,
+        width: null,
+        title: {
+            text: 'Monthly Expense Trend (Last 12 Months)',
+            font: { size: 20 }
+        },
+        xaxis: {
+            title: 'Month',
+            tickangle: -45,
+            tickmode: 'array',
+            ticktext: months,
+            tickvals: months,
+            showgrid: true,
+            gridcolor: '#f0f0f0'
+        },
+        yaxis: {
+            title: 'Total Expenses (₹)',
+            tickformat: ',.0f',
+            showgrid: true,
+            gridcolor: '#f0f0f0'
+        },
+        showlegend: true,
+        legend: {
+            orientation: 'h',
+            y: -0.2
+        },
+        autosize: true,
+        margin: { 
+            t: 50,
+            l: 80,
+            r: 20,
+            b: 120  // Increased bottom margin for rotated labels
+        },
+        plot_bgcolor: 'white'
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: false,
+        displaylogo: false
+    };
+
+    try {
+        Plotly.newPlot('expense-trend', traces, layout, config).then(() => {
+            console.log('Trend chart plotted successfully');
+        }).catch(error => {
+            console.error('Error plotting trend chart:', error);
+        });
+    } catch (error) {
+        console.error('Error creating trend chart:', error);
+        document.getElementById('expense-trend').innerHTML = 
+            '<div class="alert alert-danger">Error creating expense trend chart</div>';
+    }
+}
 // Expense Chart
+// Expense Chart Functions
 function createExpenseChart(data) {
-    console.log('Creating chart with data:', data);
+    console.log('Creating pie chart with data:', data);
     const categories = Object.keys(data.breakdown);
     if (categories.length === 0) {
         console.log('No expense data found');
@@ -54,10 +163,10 @@ function createExpenseChart(data) {
     };
 
     const layout = {
-        height: 450,
+        height: 400,
         width: null, // This allows the chart to be responsive
         title: {
-            text: 'Expense Breakdown',
+            text: '',  // Title is now in the HTML
             font: { size: 20 }
         },
         autosize: true,
@@ -84,11 +193,17 @@ function createExpenseChart(data) {
     };
 
     console.log('Plotting chart with trace:', trace);
-    Plotly.newPlot('expense-chart', [trace], layout, config).then(() => {
-        console.log('Chart plotted successfully');
-    }).catch(error => {
-        console.error('Error plotting chart:', error);
-    });
+    try {
+        Plotly.newPlot('expense-chart', [trace], layout, config).then(() => {
+            console.log('Pie chart plotted successfully');
+        }).catch(error => {
+            console.error('Error plotting pie chart:', error);
+        });
+    } catch (error) {
+        console.error('Error creating pie chart:', error);
+        document.getElementById('expense-chart').innerHTML = 
+            '<div class="alert alert-danger">Error creating expense chart</div>';
+    }
 }
 
 function handleCategoryChange(select) {
@@ -115,6 +230,7 @@ function addExpense(form) {
     }
     
     const expenseData = {
+        date: formData.get('date'),
         amount: formData.get('amount'),
         category: category,
         description: formData.get('description')
@@ -142,6 +258,79 @@ function addExpense(form) {
     return false;
 }
 
+function editGoal(id, name, targetAmount, currentAmount, targetDate) {
+    // Update form for editing
+    const form = document.getElementById('goalForm');
+    form.dataset.goalId = id;
+    
+    // Fill form fields
+    document.getElementById('name').value = name;
+    document.getElementById('target_amount').value = targetAmount;
+    document.getElementById('current_amount').value = currentAmount || '';
+    document.getElementById('target_date').value = targetDate;
+    
+    // Update submit button
+    const submitBtn = document.getElementById('goalSubmitBtn');
+    submitBtn.textContent = 'Update Goal';
+    
+    // Scroll to form
+    form.scrollIntoView({ behavior: 'smooth' });
+}
+
+function deleteGoal(id) {
+    if (!confirm('Are you sure you want to delete this goal?')) {
+        return;
+    }
+    
+    fetch(`/finance/goals/${id}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// Update createGoal to handle both create and edit
+function createGoal(form) {
+    const formData = new FormData(form);
+    const goalId = form.dataset.goalId;
+    const isEdit = !!goalId;
+    
+    const data = {
+        name: formData.get('name'),
+        target_amount: formData.get('target_amount'),
+        current_amount: formData.get('current_amount') || 0,
+        target_date: formData.get('target_date')
+    };
+    
+    const url = isEdit ? `/finance/goals/${goalId}` : '/finance/goals';
+    const method = isEdit ? 'PUT' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            location.reload();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+    
+    return false;
+}
+
 // Reset form after submission
 function resetForm(form) {
     form.reset();
@@ -155,16 +344,17 @@ function resetForm(form) {
 async function getFinancialAdvice(topic) {
     const response = await fetch(`/finance/advice?topic=${encodeURIComponent(topic)}`);
     const data = await response.json();
-    document.getElementById('advice-content').textContent = data.advice;
+    document.getElementById('advice-content').innerHTML = data.html;
 }
 
 // Edit expense
-function editExpense(id, category, amount, description) {
+function editExpense(id, category, amount, description, date) {
     // Update the current form to be an edit form
     const form = document.querySelector('.expense-form');
     form.dataset.expenseId = id;
     
     // Fill in the form with current values
+    document.getElementById('date').value = date;
     document.getElementById('amount').value = amount;
     document.getElementById('category').value = category;
     document.getElementById('description').value = description;
@@ -200,10 +390,22 @@ function deleteExpense(id) {
 
 // Load expense chart on page load
 window.addEventListener('load', function() {
+    // Set default date to today
+    const today = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+        dateInput.value = today;
+        dateInput.max = today; // Prevent future dates
+    }
+
+    console.log('Loading expense charts...');
     const chartContainer = document.getElementById('expense-chart');
-    if (chartContainer) {
+    const histogramContainer = document.getElementById('expense-trend');
+    
+    if (chartContainer && histogramContainer) {
         fetch('/finance/expenses/analysis')
             .then(response => {
+                console.log('Got response from server');
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
@@ -215,13 +417,138 @@ window.addEventListener('load', function() {
                     chartContainer.innerHTML = '<div class="alert alert-info">No expense data available</div>';
                     return;
                 }
+                
+                // Create pie chart
+                
                 createExpenseChart(data);
+                // Create line chart if we have trend data
+                if (data.monthly_trend && data.monthly_trend.length > 0) {
+                    console.log('Creating trend chart with data:', data.monthly_trend);
+                    createExpenseTrendChart(data.monthly_trend);
+                } else {
+                    console.log('No trend data available');
+                    document.getElementById('expense-trend').innerHTML = 
+                        '<div class="alert alert-info">No trend data available</div>';
+                }
             })
-            .catch(error => console.error('Error loading expense data:', error));
+            .catch(error => {
+                console.error('Error loading expense data:', error);
+                chartContainer.innerHTML = '<div class="alert alert-danger">Error loading expense chart</div>';
+                histogramContainer.innerHTML = '<div class="alert alert-danger">Error loading expense trend</div>';
+            });
+    } else {
+        console.error('Chart containers not found');
     }
 });
 
-// Create Goal
+function createExpenseTrendChart(monthlyData) {
+    console.log('Creating trend chart with monthly data:', monthlyData);
+    const months = monthlyData.map(d => d.month);
+    const amounts = monthlyData.map(d => d.amount);
+
+    // Calculate moving average for trend line
+    const movingAverage = [];
+    const period = 3; // 3-month moving average
+    
+    for (let i = 0; i < amounts.length; i++) {
+        if (i < period - 1) {
+            movingAverage.push(null);
+            continue;
+        }
+        
+        let sum = 0;
+        for (let j = 0; j < period; j++) {
+            sum += amounts[i - j];
+        }
+        movingAverage.push(sum / period);
+    }
+
+    const traces = [
+        {
+            x: months,
+            y: amounts,
+            type: 'scatter',
+            mode: 'lines+markers',
+            name: 'Monthly Expenses',
+            line: {
+                color: '#0d6efd',
+                width: 2
+            },
+            marker: {
+                size: 8,
+                color: '#0d6efd'
+            },
+            hovertemplate: 'Month: %{x}<br>Amount: ₹%{y:.2f}<extra></extra>'
+        },
+        {
+            x: months,
+            y: movingAverage,
+            type: 'scatter',
+            mode: 'lines',
+            name: '3-Month Trend',
+            line: {
+                color: '#dc3545',
+                width: 2,
+                dash: 'dot'
+            },
+            hovertemplate: 'Month: %{x}<br>Trend: ₹%{y:.2f}<extra></extra>'
+        }
+    ];
+
+    const layout = {
+        height: 400,
+        width: null,
+        title: {
+            text: '',  // Title is now in the HTML
+            font: { size: 20 }
+        },
+        xaxis: {
+            title: 'Month',
+            tickangle: -45,
+            showgrid: true,
+            gridcolor: '#f0f0f0'
+        },
+        yaxis: {
+            title: 'Total Expenses (₹)',
+            tickformat: ',.0f',
+            showgrid: true,
+            gridcolor: '#f0f0f0'
+        },
+        showlegend: true,
+        legend: {
+            orientation: 'h',
+            y: -0.2
+        },
+        autosize: true,
+        margin: { 
+            t: 50,
+            l: 80,
+            r: 20,
+            b: 100
+        },
+        plot_bgcolor: 'white'
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: false,
+        displaylogo: false
+    };
+
+    try {
+        Plotly.newPlot('expense-trend', traces, layout, config).then(() => {
+            console.log('Trend chart plotted successfully');
+        }).catch(error => {
+            console.error('Error plotting trend chart:', error);
+        });
+    } catch (error) {
+        console.error('Error creating trend chart:', error);
+        document.getElementById('expense-trend').innerHTML = 
+            '<div class="alert alert-danger">Error creating expense trend chart</div>';
+    }
+}
+
+// Goal Management
 function createGoal(form) {
     const formData = new FormData(form);
     fetch('/finance/goals', {

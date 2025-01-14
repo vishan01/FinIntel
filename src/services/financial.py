@@ -1,11 +1,23 @@
 import google.generativeai as genai
 from datetime import datetime
-import os
+import markdown
 
 class FinancialService:
-    def __init__(self):
-        genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
-        self.model = genai.GenerativeModel('gemini-pro')
+    def __init__(self, config):
+        genai.configure(api_key=config.GOOGLE_API_KEY)
+        g_config = {
+            "temperature": 1,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 8192,
+            "response_mime_type": "text/plain",
+            }
+
+        model = genai.GenerativeModel(
+        model_name="gemini-2.0-flash-exp",
+        generation_config=g_config,
+        )
+        self.model = model
 
     def calculate_sip(self, monthly_investment: float, expected_return: float, years: int) -> dict:
         """Calculate SIP returns."""
@@ -24,14 +36,34 @@ class FinancialService:
             'final_amount': round(amount, 2)
         }
 
-    async def get_financial_advice(self, topic: str) -> str:
+    def get_financial_advice(self, topic: str) -> dict:
         """Get AI-generated financial advice."""
-        prompt = f"Provide concise, practical advice about {topic} in personal finance. Focus on actionable steps."
-        response = await self.model.generate_content(prompt)
+        prompt = f"Provide concise, practical advice about {topic} in personal finance. Focus on actionable steps. Use markdown formatting for better readability."
+        response = self.model.generate_content(prompt)
+        text = response.text
+        html = markdown.markdown(text)
+        return {
+            'text': text,
+            'html': html
+        }
+    def Chat(self, topic: str) -> str:
+        """Get AI-generated Chat."""
+        chat_session = self.model.start_chat(
+        history=[
+        ]
+        )
+        response = chat_session.send_message(topic)
         return response.text
 
     def analyze_expenses(self, expenses: list) -> dict:
         """Analyze expense patterns and provide insights."""
+        if not expenses:
+            return {
+                'total_spent': 0,
+                'breakdown': {},
+                'monthly_trend': []
+            }
+            
         total_spent = sum(expense.amount for expense in expenses)
         categories = {}
         print(f"Analyzing {len(expenses)} expenses, total: {total_spent}")
@@ -44,8 +76,8 @@ class FinancialService:
             'total_spent': total_spent,
             'breakdown': {
                 category: {
-                    'amount': amount,
-                    'percentage': (amount / total_spent * 100) if total_spent > 0 else 0
+                    'amount': float(amount),
+                    'percentage': float((amount / total_spent * 100) if total_spent > 0 else 0)
                 }
                 for category, amount in categories.items()
             }

@@ -3,8 +3,8 @@ from functools import lru_cache
 from datetime import datetime
 
 class MarketDataService:
-    def __init__(self):
-        pass
+    def __init__(self, config):
+        self.config = config
 
     @lru_cache(maxsize=1)
     def get_market_indices(self):

@@ -19,7 +19,39 @@
 }
 
 .goal-progress {
-    height: 2rem;
+    height: 1.5rem;
+    margin: 1rem 0;
+    background-color: #e9ecef;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.goal-progress .progress-bar {
+    background-color: #0d6efd;
+    color: white;
+    text-align: center;
+    line-height: 1.5rem;
+    font-size: 0.875rem;
+    transition: width 0.6s ease;
+}
+
+.goal-card {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid #dee2e6;
+}
+
+.goal-card h4 {
+    margin-bottom: 1rem;
+    color: #0d6efd;
+}
+
+.goal-card .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
 }
 
 .expense-form {
@@ -27,17 +59,108 @@
     margin: 0 auto;
 }
 
-.table td {
-    vertical-align: middle;
+/* Card styles */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1rem;
 }
 
-.btn-sm {
-    margin: 0 2px;
+.card-header {
+    padding: 1rem;
+    border-bottom: none;
+}
+
+/* Table styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table td {
+    vertical-align: middle;
+    padding: 0.75rem;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
 }
 
 .table-responsive {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+/* Form styles */
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #0d6efd;
+}
+
+input[type="date"].form-control {
+    padding: 0.375rem 0.75rem;
+    line-height: 1.5;
+}
+
+/* Hide calendar icon in some browsers */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+}
+
+.form-select:focus {
+    box-shadow: none;
+    border-color: #0d6efd;
+}
+
+/* Badge styles */
+.badge {
+    padding: 0.5em 0.75em;
+    font-weight: 500;
+}
+
+/* Chart container styles */
+.chart-container {
+    background-color: #fff;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    height: 100%;
+}
+
+.chart-container h4 {
+    color: #495057;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+/* Ensure charts are responsive */
+@media (max-width: 768px) {
+    .chart-container {
+        margin-bottom: 2rem;
+    }
+    
+    .chart-container:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Responsive grid spacing */
+@media (max-width: 768px) {
+    .g-4 {
+        --bs-gutter-y: 1rem;
+    }
 }
 
 .advice-section {

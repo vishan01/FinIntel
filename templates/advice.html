@@ -22,7 +22,7 @@
                             <option value="emergency fund">Emergency Fund</option>
                         </select>
                     </div>
-                    <div id="advice-content" class="mt-3">
+                    <div id="advice-content" class="mt-3 markdown-content">
                         Select a topic to get personalized financial advice...
                     </div>
                 </div>
@@ -48,6 +48,29 @@
 </div>
 
 <style>
+.markdown-content {
+    line-height: 1.6;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+    margin-left: 1.5rem;
+}
+
+.markdown-content p {
+    margin-bottom: 1rem;
+}
+
 .chat-messages {
     border: 1px solid #dee2e6;
     border-radius: 0.25rem;

@@ -49,6 +49,11 @@
 - Alpha Vantage API key from https://www.alphavantage.co/support/#api-key (free tier: 5 API calls per minute, 500 per day)
 - Google API key for Gemini AI
 
+## Data Serialization
+- Always convert Decimal/numeric types to float before JSON serialization
+- Sort time-series data chronologically before sending to frontend
+- Handle empty dataset cases explicitly
+
 ## Market Data Integration
 - Uses Yahoo Finance (yfinance) for real-time market data
 - Cache responses using lru_cache to optimize performance
