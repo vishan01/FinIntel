@@ -195,8 +195,8 @@ def get_advice():
     topic = request.args.get('topic', 'personal finance basics')
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         try:
-            advice_response = financial_service.get_financial_advice(topic)
-            return jsonify(advice_response)
+            advice_response = financial_service.get_financial_advice(topic,current_user.id)
+            return jsonify(advice_response.get("html",""))
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     return render_template('advice.html')
@@ -205,13 +205,12 @@ def get_advice():
 @login_required
 def chat():
     message = request.args.get('message', '')
-    print(message)
     if not message:
         return jsonify({'error': 'No message provided'}), 400
     
     try:
-        response = financial_service.Chat(message)
-        return jsonify({'response': response})
+        response = financial_service.Chat(message, current_user.id)
+        return jsonify({'response': response.get("text","")})
     except Exception as e:
-        print(e)
+        print(f"Error in chat endpoint: {e}")
         return jsonify({'error': str(e)}), 500

@@ -2,20 +2,77 @@ import google.generativeai as genai
 from datetime import datetime
 import markdown
 
+from src.models import Expense, Budget, Goal
+from flask import current_app
+from datetime import datetime, timedelta
+
 class FinancialService:
-    def __init__(self, config):
-        genai.configure(api_key=config.GOOGLE_API_KEY)
-        g_config = {
-            "temperature": 1,
-            "top_p": 0.95,
-            "top_k": 40,
-            "max_output_tokens": 8192,
-            "response_mime_type": "text/plain",
+
+    def call(self,user_id):
+        
+        # Get user's financial data from the last 6 months
+        six_months_ago = datetime.now() - timedelta(days=180)
+        
+        with current_app.app_context():
+            # Get expenses
+            expenses = Expense.query.filter_by(user_id=user_id)\
+                .filter(Expense.date >= six_months_ago)\
+                .order_by(Expense.date.desc()).all()
+            
+            # Get budgets
+            budgets = Budget.query.filter_by(user_id=user_id)\
+                .filter(Budget.month >= six_months_ago)\
+                .all()
+            
+            # Get goals
+            goals = Goal.query.filter_by(user_id=user_id).all()
+            
+            # Format data for the AI
+            self.expense_data = [
+                {
+                    'amount': expense.amount,
+                    'category': expense.category,
+                    'date': expense.date.strftime('%Y-%m-%d'),
+                    'description': expense.description
+                }
+                for expense in expenses
+            ]
+            
+            self.budget_data = [
+                {
+                    'category': budget.category,
+                    'amount': budget.amount,
+                    'month': budget.month.strftime('%Y-%m')
+                }
+                for budget in budgets
+            ]
+            
+            self.goal_data = [
+                {
+                    'name': goal.name,
+                    'target_amount': goal.target_amount,
+                    'current_amount': goal.current_amount,
+                    'target_date': goal.target_date.strftime('%Y-%m-%d')
+                }
+                for goal in goals
+            ]
+            
+            # Calculate total expenses and savings
+            total_expenses = sum(expense.amount for expense in expenses)
+            total_budget = sum(budget.amount for budget in budgets)
+            
+            self.financial_summary = {
+                'total_expenses_6m': total_expenses,
+                'total_budget_6m': total_budget,
+                'expense_count': len(expenses),
+                'active_goals': len(goals)
             }
 
+    def __init__(self, config):
+        genai.configure(api_key=config.GOOGLE_API_KEY)
+        
         model = genai.GenerativeModel(
         model_name="gemini-2.0-flash-exp",
-        generation_config=g_config,
         )
         self.model = model
 
@@ -36,9 +93,25 @@ class FinancialService:
             'final_amount': round(amount, 2)
         }
 
-    def get_financial_advice(self, topic: str) -> dict:
+    def get_financial_advice(self, topic: str,user_id:int) -> dict:
+        self.call(user_id)
         """Get AI-generated financial advice."""
-        prompt = f"Provide concise, practical advice about {topic} in personal finance. Focus on actionable steps. Use markdown formatting for better readability."
+        prompt = f"""Provide concise, practical advice about {topic} in personal finance. Focus on actionable steps. Use markdown formatting for better readability.
+        
+        User's Financial Summary (Last 6 months):
+        - Total Expenses: ₹{self.financial_summary['total_expenses_6m']}
+        - Total Budgeted: ₹{self.financial_summary['total_budget_6m']}
+        - Number of Expenses: {self.financial_summary['expense_count']}
+        - Active Goals: {self.financial_summary['active_goals']}
+        
+        Recent Expenses: {self.expense_data if self.expense_data else 'No recent expenses'}
+        
+        Budget Information: {self.budget_data if self.budget_data else 'No budget set'}
+        
+        Financial Goals: {self.goal_data if self.goal_data else 'No goals set'}
+        
+        
+        """
         response = self.model.generate_content(prompt)
         text = response.text
         html = markdown.markdown(text)
@@ -46,14 +119,38 @@ class FinancialService:
             'text': text,
             'html': html
         }
-    def Chat(self, topic: str) -> str:
-        """Get AI-generated Chat."""
-        chat_session = self.model.start_chat(
-        history=[
-        ]
-        )
-        response = chat_session.send_message(topic)
-        return response.text
+    def Chat(self, topic: str, user_id: int) -> str:
+        """Get AI-generated Chat with user context."""
+        
+        self.call(user_id)
+        # Create context-aware prompt
+        prompt = f"""
+        You are a financial assistant bot. Use the following user data to provide personalized advice.
+        
+        User's Financial Summary (Last 6 months):
+        - Total Expenses: ₹{self.financial_summary['total_expenses_6m']}
+        - Total Budgeted: ₹{self.financial_summary['total_budget_6m']}
+        - Number of Expenses: {self.financial_summary['expense_count']}
+        - Active Goals: {self.financial_summary['active_goals']}
+        
+        Recent Expenses: {self.expense_data if self.expense_data else 'No recent expenses'}
+        
+        Budget Information: {self.budget_data if self.budget_data else 'No budget set'}
+        
+        Financial Goals: {self.goal_data if self.goal_data else 'No goals set'}
+        
+        User Query: {topic}
+        
+        """
+        
+        response = self.model.generate_content(prompt)
+        print(response.text)
+        text = response.text
+        html = markdown.markdown(text)
+        return {
+            'text': text,
+            'html': html
+        }
 
     def analyze_expenses(self, expenses: list) -> dict:
         """Analyze expense patterns and provide insights."""
