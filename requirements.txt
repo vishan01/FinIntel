@@ -14,3 +14,4 @@ requests==2.31.0
 python-jose==3.3.0
 Flask-Migrate==4.0.5
 Markdown==3.7
+yfinance
