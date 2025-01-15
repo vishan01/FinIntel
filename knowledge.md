@@ -32,6 +32,14 @@
 - Budget: Monthly budget limits by category
 - Goal: Financial goals with target amounts and dates
 
+## Database Migrations
+- Use Flask-Migrate for database schema management
+- Create new migration: `flask db migrate -m "description"`
+- Apply migrations: `flask db upgrade`
+- Rollback migrations: `flask db downgrade`
+- All schema changes must go through migrations
+- Never modify the database schema directly
+
 ## Security Notes
 - Never commit .env file
 - Use environment variables for sensitive data
@@ -57,9 +65,17 @@
 ## Market Data Integration
 - Uses Yahoo Finance (yfinance) for real-time market data
 - Cache responses using lru_cache to optimize performance
-- Currently displays NIFTY 50 index on home page
+- Currently displays S&P 500 index on home page
+- Supports user stock watchlists stored in User.stock_tickers as comma-separated values
 - Error handling and loading states implemented
 - No API key required for basic usage
+- CSRF protection required for all forms including watchlist management
+- Handle invalid stock tickers gracefully by skipping them without error
+- Use ^GSPC for S&P 500 index data
+- Handle invalid stock tickers gracefully by skipping them without error
+- Support both POST and DELETE methods for watchlist management
+- Handle invalid stock tickers gracefully by skipping them without error
+- Use ^GSPC for S&P 500 index data
 
 ## AI Integration
 - Uses Gemini AI for financial advice and chat

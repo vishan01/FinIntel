@@ -9,6 +9,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(128))
+    stock_tickers = db.Column(db.String(500), default='')  # Comma-separated list of tickers
     expenses = db.relationship('Expense', backref='user', lazy=True)
     budgets = db.relationship('Budget', backref='user', lazy=True)
     goals = db.relationship('Goal', backref='user', lazy=True)

@@ -57,10 +57,17 @@
 
     {% if current_user.is_authenticated %}
         <div class="row mt-4">
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Market Overview</h5>
+                        <form class="form-inline" action="{{ url_for('finance.add_to_watchlist') }}" method="post">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="ticker" placeholder="Enter Ticker">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-primary">Add Stock</button>
+                            </div>
+                        </form>
                     </div>
                     <div class="card-body" id="market-data">
                         <div class="d-flex justify-content-center">
@@ -99,19 +106,72 @@ document.addEventListener('DOMContentLoaded', function() {
                 marketDataDiv.innerHTML = `<div class="alert alert-warning">${data.error}</div>`;
                 return;
             }
+            console.log(data)
+            let html = '';
             
-            if (data.nifty50) {
-                const nifty = data.nifty50;
-                const changeClass = parseFloat(nifty.change) >= 0 ? 'text-success' : 'text-danger';
-                marketDataDiv.innerHTML = `
-                    <h3>NIFTY 50</h3>
-                    <h4>₹${nifty.price.toLocaleString()}</h4>
-                    <p class="${changeClass}">
-                        ${nifty.change >= 0 ? '↑' : '↓'} ${Math.abs(nifty.change).toFixed(2)} (${nifty.change_percent})
-                    </p>
-                    <small class="text-muted">Last updated: ${nifty.last_updated}</small>
+            if (data.sp) {
+                const sp = data.sp;
+                const changeClass = parseFloat(sp.change) >= 0 ? 'text-success' : 'text-danger';
+                html += `
+                    <div class="mb-4">
+                        <h3>S&P 500</h3>
+                        <h4>₹${sp.price.toLocaleString()}</h4>
+                        <p class="${changeClass}">
+                            ${sp.change >= 0 ? '↑' : '↓'} ${Math.abs(sp.change).toFixed(2)} (${sp.change_percent})
+                        </p>
+                        <small class="text-muted">Last updated: ${sp.last_updated}</small>
+                    </div>
                 `;
             }
+            
+            if (data.stocks && data.stocks.length > 0) {
+                html += `
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Ticker</th>
+                                    <th>Price</th>
+                                    <th>Change</th>
+                                    <th>Volume</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
+                
+                data.stocks.forEach(stock => {
+                    const changeClass = parseFloat(stock.change) >= 0 ? 'text-success' : 'text-danger';
+                    html += `
+                        <tr>
+                            <td>${stock.ticker}</td>
+                            <td>₹${stock.price}</td>
+                            <td class="${changeClass}">
+                                ${parseFloat(stock.change) >= 0 ? '↑' : '↓'} 
+                                ${Math.abs(parseFloat(stock.change)).toFixed(2)} 
+                                (${stock.change_percent}%)
+                            </td>
+                            <td>${stock.volume}</td>
+                            <td>
+                                <form action="/finance/watchlist/${stock.ticker}" method="post" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else {
+                html += '<p class="text-muted">No stocks in watchlist. Add some stocks to track them here.</p>';
+            }
+            
+            marketDataDiv.innerHTML = html;
         })
         .catch(error => {
             console.error('Error fetching market data:', error);

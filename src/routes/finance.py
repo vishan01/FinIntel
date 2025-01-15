@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, render_template
+from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for
 from flask_login import login_required, current_user
 from datetime import datetime
 from src.models import db, Expense, Budget, Goal
@@ -14,7 +14,6 @@ def init_services(fin_service, mkt_service):
     global financial_service, market_service
     financial_service = fin_service
     market_service = mkt_service
-
 finance_bp = Blueprint('finance', __name__)
 
 @finance_bp.route('/sip-calculator', methods=['GET', 'POST'])
@@ -73,6 +72,33 @@ def get_market_data():
     """Get current market data."""
     data = market_service.get_market_indices()
     return jsonify(data)
+
+@finance_bp.route('/watchlist', methods=['POST'])
+@login_required
+def add_to_watchlist():
+    """Add a stock to user's watchlist."""
+    ticker = request.form.get('ticker')
+    if not ticker:
+        flash('Please provide a ticker symbol', 'error')
+        return redirect(url_for('home'))
+        
+    if market_service.add_stock_to_watchlist(ticker):
+        flash(f'{ticker} added to watchlist', 'success')
+    else:
+        flash(f'{ticker} already in watchlist', 'info')
+    return redirect(url_for('home'))
+
+@finance_bp.route('/watchlist/<ticker>', methods=['POST', 'DELETE'])
+@login_required
+def remove_from_watchlist(ticker):
+    """Remove a stock from user's watchlist."""
+    # Handle both POST and DELETE methods for removal
+    if request.method in ['POST', 'DELETE']:
+        if market_service.remove_stock_from_watchlist(ticker):
+            flash(f'{ticker} removed from watchlist', 'success')
+        else:
+            flash('Stock not in watchlist', 'error')
+    return redirect(url_for('home'))
 
 @finance_bp.route('/budget/alerts')
 @login_required

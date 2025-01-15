@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, render_template
 from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from src.models import db, User
 from dotenv import load_dotenv
@@ -26,6 +27,7 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     migrate = Migrate(app, db)
+    csrf = CSRFProtect(app)
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
@@ -47,7 +49,7 @@ def create_app():
     from src.services.market_data import MarketDataService
     
     financial_service = FinancialService(config)
-    market_service = MarketDataService(config)
+    market_service = MarketDataService()
     
     # Pass services to blueprints
     from src.routes.finance import init_services
