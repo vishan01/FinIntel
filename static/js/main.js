@@ -259,6 +259,7 @@ function addExpense(form) {
         method: method,
         headers: {
             'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
         },
         body: JSON.stringify(expenseData)
     })
