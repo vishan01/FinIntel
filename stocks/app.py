@@ -1,22 +1,36 @@
 from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
-import yfinance as yf
-from utils import fetch_stock_info
+from utils import fetch_stock_info, fetch_top_stocks, plot_stocks
+
+
+
 
 app = Flask(__name__)
 stock_watchlist = []
 app.secret_key = '918237981y48t9580y4t8y5t'
+
 @app.route('/')
-def dashboard():
+def top_stocks():
+    stocks_data = fetch_top_stocks()
+    return render_template('index.html', stocks=stocks_data)
+
+@app.route('/my-watchlist')
+def my_watchlist():
     stocks_data = []
+    plot_url = ''
     for ticker in stock_watchlist:
         stocks_data.append(fetch_stock_info(ticker))
-    print(stocks_data)
-    return render_template('dashboard.html', stocks=stocks_data)
+    if len(stock_watchlist) > 0:
+        plot_url = plot_stocks(stock_watchlist)
+    return render_template('dashboard.html', stocks=stocks_data,plot_url=plot_url)
 
 @app.route('/stock/<ticker>', methods=['GET'])
 def get_stock_details(ticker):
     return jsonify(fetch_stock_info(ticker))
+    
 
+    
+
+    
 @app.route('/watchlist', methods=['POST'])
 def watchlist():
     ticker = request.form.get('ticker')
@@ -28,15 +42,16 @@ def watchlist():
     else:
         flash(f'{ticker} already in watchlist', 'info')
         
-    return redirect(url_for('dashboard'))
+    return redirect(url_for('my_watchlist'))
 
 @app.route('/watchlist/<ticker>', methods=['POST'])
 def remove_from_watchlist(ticker):
     if ticker in stock_watchlist:
         stock_watchlist.remove(ticker)
         flash(f'{ticker} removed from watchlist', 'success')
-        return redirect(url_for('dashboard'))
-    return jsonify({'message': 'Stock not in watchlist'}), 404
+    else:
+        flash(f'{ticker} not in watchlist', 'info')
+    return redirect(url_for('my_watchlist'))
 
 if __name__ == '__main__':
     app.run(debug=True)

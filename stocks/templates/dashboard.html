@@ -7,8 +7,27 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
+
     <div class="container">
-        <h1 class="mt-5">Stock Dashboard</h1>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="/">FinIntel</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/my-watchlist">Dashboard</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <h1 class="mt-5">My Watch List</h1>
         
         <!-- Form to add new stock -->
         <form class="form-inline mt-3" action="/watchlist" method="post">
@@ -56,6 +75,18 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        {% if plot_url %}
+            <div class="mt-5">
+            <h2>Performance Plots</h2>
+            <img src="data:image/png;base64,{{ plot_url }}" alt="Performance Plots" class="img-fluid">
+            </div>
+        {% else %}
+            <div class="mt-5">
+            <h2>No Performance Plots Available</h2>
+            <p>Please add stocks to your watchlist to see performance plots.</p>
+            </div>
+        {% endif %}
     </div>
 </body>
 </html>
