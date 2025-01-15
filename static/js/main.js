@@ -4,24 +4,38 @@ function calculateSIP() {
     const expectedReturn = document.getElementById('expected_return').value;
     const years = document.getElementById('years').value;
 
+    // Convert input values to numbers before sending
     fetch('/finance/sip-calculator', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
         },
         body: JSON.stringify({
-            monthly_investment: monthlyInvestment,
-            expected_return: expectedReturn,
-            years: years
+            monthly_investment: parseFloat(monthlyInvestment),
+            expected_return: parseFloat(expectedReturn),
+            years: parseInt(years)
         })
     })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('total_investment').textContent = data.total_investment;
-        document.getElementById('total_returns').textContent = data.total_returns;
-        document.getElementById('final_amount').textContent = data.final_amount;
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
     })
-    .catch(error => console.error('Error:', error));
+    .then(data => {
+        // Format numbers with commas and 2 decimal places
+        document.getElementById('total_investment').textContent = 
+            Number(data.total_investment).toLocaleString('en-IN', {maximumFractionDigits: 2});
+        document.getElementById('total_returns').textContent = 
+            Number(data.total_returns).toLocaleString('en-IN', {maximumFractionDigits: 2});
+        document.getElementById('final_amount').textContent = 
+            Number(data.final_amount).toLocaleString('en-IN', {maximumFractionDigits: 2});
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to calculate SIP. Please try again.');
+    });
 }
 function createExpenseTrendChart(monthlyData) {
     console.log('Creating trend chart with monthly data:', monthlyData);

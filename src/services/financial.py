@@ -78,20 +78,26 @@ class FinancialService:
 
     def calculate_sip(self, monthly_investment: float, expected_return: float, years: int) -> dict:
         """Calculate SIP returns."""
-        monthly_rate = expected_return / (12 * 100)
-        months = years * 12
-        
-        # Calculate future value using SIP formula
-        amount = monthly_investment * ((pow(1 + monthly_rate, months) - 1) / monthly_rate) * (1 + monthly_rate)
-        
-        total_investment = monthly_investment * months
-        total_returns = amount - total_investment
-        
-        return {
-            'total_investment': round(total_investment, 2),
-            'total_returns': round(total_returns, 2),
-            'final_amount': round(amount, 2)
-        }
+        try:
+            monthly_rate = expected_return / (12 * 100)  # Convert percentage to monthly decimal
+            months = years * 12
+            
+            # Calculate future value using SIP formula
+            # FV = P * (((1 + r)^n - 1) / r) * (1 + r)
+            # where P is monthly investment, r is monthly rate, n is number of months
+            amount = monthly_investment * ((pow(1 + monthly_rate, months) - 1) / monthly_rate) * (1 + monthly_rate)
+            
+            total_investment = monthly_investment * months
+            total_returns = amount - total_investment
+            
+            return {
+                'total_investment': round(total_investment, 2),
+                'total_returns': round(total_returns, 2),
+                'final_amount': round(amount, 2)
+            }
+        except Exception as e:
+            print(f"Error calculating SIP: {str(e)}")
+            raise
     @lru_cache(maxsize=1)
     def get_financial_advice(self, topic: str,user_id:int) -> dict:
         self.call(user_id)

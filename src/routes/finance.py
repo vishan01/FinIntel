@@ -22,13 +22,45 @@ def calculate_sip():
     if request.method == 'GET':
         return render_template('sip_calculator.html')
     
-    data = request.get_json()
-    result = financial_service.calculate_sip(
-        monthly_investment=float(data['monthly_investment']),
-        expected_return=float(data['expected_return']),
-        years=int(data['years'])
-    )
-    return jsonify(result)
+    try:
+        data = request.get_json()
+        print("Received SIP calculation request:", data)  # Debug log
+        
+        if not data:
+            print("No data provided in request")
+            return jsonify({'error': 'No data provided'}), 400
+            
+        # Extract and validate inputs
+        try:
+            monthly_investment = float(data.get('monthly_investment', 0))
+            expected_return = float(data.get('expected_return', 0))
+            years = int(data.get('years', 0))
+        except (ValueError, TypeError) as e:
+            print(f"Input conversion error: {str(e)}")
+            return jsonify({'error': f'Invalid input format: {str(e)}'}), 400
+        
+        # Validate values
+        if monthly_investment <= 0:
+            return jsonify({'error': 'Monthly investment must be greater than 0'}), 400
+        if expected_return <= 0:
+            return jsonify({'error': 'Expected return must be greater than 0'}), 400
+        if years <= 0:
+            return jsonify({'error': 'Investment period must be greater than 0'}), 400
+            
+        print(f"Processing SIP calculation: {monthly_investment=}, {expected_return=}, {years=}")
+        
+        result = financial_service.calculate_sip(
+            monthly_investment=monthly_investment,
+            expected_return=expected_return,
+            years=years
+        )
+        
+        print("SIP calculation result:", result)
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"Error in SIP calculator: {str(e)}")
+        return jsonify({'error': f'Failed to calculate SIP: {str(e)}'}), 500
 
 @finance_bp.route('/expenses', methods=['POST'])
 @login_required
