@@ -356,11 +356,22 @@ function resetForm(form) {
 
 // Financial Advice
 async function getFinancialAdvice(topic) {
-    const response = await fetch(`/finance/advice_info/${topic}`);
+    // Show loading spinner
+    const loadingSpinner = document.getElementById('advice-loading');
+    loadingSpinner.style.display = 'block';
     
-    const data = await response.json();
-    console.log(data)
-    document.getElementById('advice-content').innerHTML = data;
+    try {
+        const response = await fetch(`/finance/advice_info/${topic}`);
+        const data = await response.json();
+        console.log(data);
+        document.getElementById('advice-content').innerHTML = data;
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('advice-content').innerHTML = 'Sorry, there was an error getting financial advice.';
+    } finally {
+        // Hide loading spinner
+        loadingSpinner.style.display = 'none';
+    }
 }
 
 // Edit expense

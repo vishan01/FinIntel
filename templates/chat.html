@@ -13,6 +13,7 @@
                             Hello! I'm your AI financial assistant. How can I help you today?
                         </div>
                     </div>
+                    <div id="chat-loading" class="loading-spinner"></div>
                     <form id="chat-form" onsubmit="return sendMessage(event)" class="chat-input-form">
                         <div class="input-group">
                             <input type="text" id="message-input" class="form-control" placeholder="Ask anything about finance...">
@@ -100,6 +101,10 @@ async function sendMessage(event) {
     addMessageToChat(message, 'user');
     input.value = '';
 
+    // Show loading spinner
+    const loadingSpinner = document.getElementById('chat-loading');
+    loadingSpinner.style.display = 'block';
+
     try {
         const response = await fetch(`/finance/chat?message=${encodeURIComponent(message)}`);
         const data = await response.json();
@@ -107,9 +112,11 @@ async function sendMessage(event) {
     } catch (error) {
         console.error('Error:', error);
         addMessageToChat('Sorry, there was an error processing your request.', 'ai');
+    } finally {
+        // Hide loading spinner
+        loadingSpinner.style.display = 'none';
     }
 }
-
 function addMessageToChat(message, type) {
     const chatMessages = document.getElementById('chat-messages');
     const messageDiv = document.createElement('div');
