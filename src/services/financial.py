@@ -190,7 +190,7 @@ class FinancialService:
 
     def calculate_goal_savings(self, target_amount: float, target_date: datetime, current_amount: float = 0) -> dict:
         """Calculate monthly savings needed to reach a financial goal."""
-        months_remaining = (target_date - datetime.now()).days / 30
+        months_remaining = (datetime(target_date) - datetime.now()).days / 30
         amount_needed = target_amount - current_amount
         
         if months_remaining <= 0:

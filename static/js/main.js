@@ -301,6 +301,7 @@ function deleteGoal(id) {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
         }
     })
     .then(response => response.json())
@@ -332,6 +333,7 @@ function createGoal(form) {
         method: method,
         headers: {
             'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
         },
         body: JSON.stringify(data)
     })
@@ -405,6 +407,7 @@ function deleteExpense(id) {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
         }
     })
     .then(response => response.json())
@@ -583,6 +586,7 @@ function createGoal(form) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
         },
         body: JSON.stringify(Object.fromEntries(formData))
     })
@@ -593,5 +597,7 @@ function createGoal(form) {
         }
     })
     .catch(error => console.error('Error:', error));
+    window.location.reload()
+    console.log("done")
     return false;
 }
