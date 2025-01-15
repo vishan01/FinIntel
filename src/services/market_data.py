@@ -3,6 +3,86 @@ from functools import lru_cache
 from datetime import datetime
 from flask_login import current_user
 from src.models import db, User
+import io
+import base64
+import matplotlib.pyplot as plt
+
+def fetch_top_stocks():
+    """Get data for top stocks."""
+    top_stocks = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'BRK-B', 'V', 'JNJ', 'WMT', 'JPM', 
+                  'PG', 'UNH', 'NVDA', 'HD', 'DIS', 'PYPL', 'MA', 'VZ', 'ADBE', 'NFLX']
+    stocks_data = []
+    for ticker in top_stocks:
+        stocks_data.append(fetch_stock_info(ticker))
+    return stocks_data
+
+def fetch_stock_info(ticker):
+    """Get information for a specific stock."""
+    stock_data = []
+    ticker = ticker.upper().strip()
+    stock = yf.Ticker(ticker)
+    stock_info = stock.history(period='1d')
+    if not stock_info.empty:
+        row = stock_info.iloc[-1]
+        price = row['Open']
+        previous_close = stock_info.get('previousClose', row['Close'])
+        change = price - previous_close
+        stock_data = {
+            'ticker': ticker,
+            'price': round(row['Open'], 2),
+            'high': round(row['High'], 2),
+            'low': round(row['Low'], 2),
+            'volume': round(row['Volume'], 2),
+            'previous_close': round(previous_close, 2),
+            'change': round(change, 2),
+            'change_percent': round((change / previous_close) * 100 if previous_close else 0, 2),
+            'date_time': row.name.strftime('%Y-%m-%d')
+        }
+    return stock_data
+
+def plot_stocks(stocks_watchlist):
+    """Generate performance plot for watchlist stocks."""
+    yf_period = "1mo"
+    yf_interval = "1d"
+    yf_returns = yf.download(
+        tickers=stocks_watchlist,
+        period=yf_period,
+        interval=yf_interval,
+        group_by='ticker',
+        auto_adjust=True,
+        prepost=True,
+        threads=True,
+        proxy=None
+    )
+
+    yf_returns = yf_returns.iloc[:, yf_returns.columns.get_level_values(1)=='Close']
+    yf_returns.columns = yf_returns.columns.droplevel(1)
+    yf_returns = round(yf_returns.pct_change()*100, 2)
+
+    col_order = []
+    for i in stocks_watchlist:
+        col_order.append(i)
+
+    yf_returns = yf_returns[col_order]
+    perf_dy = yf_returns
+    perf_dy['WEEK'] = perf_dy.index.strftime("%Y-%U")
+    perf_wk = perf_dy.groupby('WEEK').sum()
+
+    plt.figure(figsize=(10,6))
+    plt.plot(perf_wk[stocks_watchlist])
+    plt.title('SYMBOLS', fontsize=14)
+    plt.ylabel('percent change', fontsize=14)
+    plt.legend(perf_wk[stocks_watchlist], loc="upper left", bbox_to_anchor=(1,1))
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    plot_url = base64.b64encode(img.getvalue()).decode()
+    plt.close()
+
+    return plot_url
 
 class MarketDataService:
     def __init__(self):

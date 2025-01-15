@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from datetime import datetime
 from src.models import db, Expense, Budget, Goal
 from src.services.financial import FinancialService
-from src.services.market_data import MarketDataService
+from src.services.market_data import MarketDataService, fetch_top_stocks, fetch_stock_info, plot_stocks
 from src.services.budget_alert import BudgetAlertService
 
 # Initialize globals before blueprint creation
@@ -104,6 +104,31 @@ def get_market_data():
     """Get current market data."""
     data = market_service.get_market_indices()
     return jsonify(data)
+
+@finance_bp.route('/stocks')
+def top_stocks():
+    """Display top stocks page."""
+    stocks_data = fetch_top_stocks()
+    return render_template('stocks.html', stocks=stocks_data)
+
+@finance_bp.route('/my-watchlist')
+@login_required
+def my_watchlist():
+    """Display user's stock watchlist."""
+    stocks_data = []
+    plot_url = ''
+    if current_user.stock_tickers:
+        tickers = current_user.stock_tickers.split(',')
+        for ticker in tickers:
+            stocks_data.append(fetch_stock_info(ticker))
+        if tickers:
+            plot_url = plot_stocks(tickers)
+    return render_template('watchlist.html', stocks=stocks_data, plot_url=plot_url)
+
+@finance_bp.route('/stock/<ticker>')
+def get_stock_details(ticker):
+    """Get details for a specific stock."""
+    return jsonify(fetch_stock_info(ticker))
 
 @finance_bp.route('/watchlist', methods=['POST'])
 @login_required

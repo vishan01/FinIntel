@@ -58,7 +58,125 @@
             </div>
         </div>
     </div>
+    <div class="container">
+        {% if not current_user.is_authenticated %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="mb-0">Stock Market Overview</h2>
+                </div>
+                <div class="card-body">
+                    <!-- Search Bar -->
+                    <div class="search-bar mb-4">
+                        <form id="searchForm" class="form-inline">
+                            <div class="input-group">
+                                <input class="form-control" type="search" placeholder="Search for a stock (e.g., AAPL, MSFT)" aria-label="Search" id="searchInput">
+                                <button class="btn btn-outline-primary" type="submit">Search</button>
+                            </div>
+                        </form>
+                    </div>
 
+                    <!-- Search Results -->
+                    <div id="searchResults" class="mb-4"></div>
+
+                    <!-- Top Stocks -->
+                    <h3>Top Stocks</h3>
+                    <div id="top-stocks-container">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load top stocks
+            fetch('/finance/stocks')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const stockTable = doc.querySelector('.table');
+                    if (stockTable) {
+                        document.getElementById('top-stocks-container').innerHTML = stockTable.outerHTML;
+                    } else {
+                        throw new Error('Stock table not found in response');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading top stocks:', error);
+                    document.getElementById('top-stocks-container').innerHTML = 
+                        '<div class="alert alert-danger">Error loading top stocks</div>';
+                });
+
+            // Handle stock search
+            document.getElementById('searchForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const ticker = document.getElementById('searchInput').value.trim();
+                if (!ticker) return;
+
+                const searchResults = document.getElementById('searchResults');
+                searchResults.innerHTML = `
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                `;
+
+                fetch(`/finance/stock/${ticker}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (!data || !data.ticker) {
+                            throw new Error('Stock not found');
+                        }
+                        searchResults.innerHTML = `
+                            <h4>Search Results</h4>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Ticker</th>
+                                        <th>Price</th>
+                                        <th>High</th>
+                                        <th>Low</th>
+                                        <th>Volume</th>
+                                        <th>Previous Close</th>
+                                        <th>Change</th>
+                                        <th>Change %</th>
+                                        <th>Date/Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>${data.ticker}</td>
+                                        <td>${data.price}</td>
+                                        <td>${data.high}</td>
+                                        <td>${data.low}</td>
+                                        <td>${data.volume}</td>
+                                        <td>${data.previous_close}</td>
+                                        <td>${data.change}</td>
+                                        <td>${data.change_percent}%</td>
+                                        <td>${data.date_time}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        `;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching stock data:', error);
+                        searchResults.innerHTML = 
+                            '<div class="alert alert-warning">Stock not found or error occurred while fetching data</div>';
+                    });
+            });
+        });
+    </script>
+    {% endif %}
+    </div>
     {% if current_user.is_authenticated %}
         <div class="row mt-4">
             <div class="col-md-12">

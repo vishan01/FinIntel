@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}My Watchlist{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mt-5">My Watch List</h1>
+    
+    <!-- Form to add new stock -->
+    <form class="form-inline mt-3" action="/finance/watchlist" method="post">
+        <div class="form-group mb-2">
+            <label for="ticker" class="sr-only">Ticker</label>
+            <input type="text" class="form-control" id="ticker" name="ticker" placeholder="Enter Ticker">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        </div>
+        <button type="submit" class="btn btn-primary mb-2 ml-2">Add Stock</button>
+    </form>
+
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Ticker</th>
+                <th>Price</th>
+                <th>High</th>
+                <th>Low</th>
+                <th>Volume</th>
+                <th>Previous Close</th>
+                <th>Change</th>
+                <th>Change %</th>
+                <th>Date/Time</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stock in stocks %}
+                <tr>
+                    <td>{{ stock.ticker }}</td>
+                    <td>{{ stock.price }}</td>
+                    <td>{{ stock.high }}</td>
+                    <td>{{ stock.low }}</td>
+                    <td>{{ stock.volume }}</td>
+                    <td>{{ stock.previous_close }}</td>
+                    <td>{{ stock.change }}</td>
+                    <td>{{ stock.change_percent }}%</td>
+                    <td>{{ stock.date_time }}</td>
+                    <td>
+                        <form action="/finance/watchlist/{{ stock.ticker }}" method="post" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if plot_url %}
+        <div class="mt-5">
+            <h2>Performance Plots</h2>
+            <img src="data:image/png;base64,{{ plot_url }}" alt="Performance Plots" class="img-fluid">
+        </div>
+    {% else %}
+        <div class="mt-5">
+            <h2>No Performance Plots Available</h2>
+            <p>Please add stocks to your watchlist to see performance plots.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
