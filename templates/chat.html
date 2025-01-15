@@ -9,7 +9,7 @@
             <div class="card">
                 <div class="card-body">
                     <div id="chat-messages" class="chat-messages mb-3">
-                        <div class="ai-message mb-3">
+                        <div class="ai-message mb-3 p-2">
                             Hello! I'm your AI financial assistant. How can I help you today?
                         </div>
                     </div>
@@ -36,7 +36,7 @@
     height: calc(100vh - 250px);
     overflow-y: auto;
     padding: 20px;
-    background-color: #f8f9fa;
+    background-color: #4b4d4e;
     border-radius: 8px;
     margin-bottom: 20px;
 }
@@ -55,17 +55,17 @@
     margin-left: auto;
 }
 
-.ai-message {
-    background-color: #e9ecef;
-    color: #212529;
+.ai-message p, h1, h2, h3, h4{
+    background-color: var(--input-bg);
+    color: #e7e9eb;
     margin-right: auto;
 }
 
 .chat-input-form {
     position: sticky;
     bottom: 0;
-    background-color: white;
-    padding: 15px 0;
+    background-color: var(--background-dark);
+    
 }
 
 .input-group {

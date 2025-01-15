@@ -6,12 +6,16 @@
 <div class="container">
     <div class="row mb-5">
         <div class="col-md-8 offset-md-2 text-center">
-            <h1 class="display-4 mb-4">Welcome to FinIntel</h1>
-            <p class="lead">Your personal finance management and investment planning solution</p>
+            <h1 class="display-4 mb-4" style="animation: fadeIn 0.8s ease-out;">Welcome to FinIntel</h1>
+            <p class="lead" style="animation: fadeIn 0.8s ease-out 0.2s both;">Your personal finance management and investment planning solution</p>
             {% if not current_user.is_authenticated %}
-                <div class="mt-4">
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary me-3">Login</a>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary">Register</a>
+                <div class="mt-4" style="animation: fadeIn 0.8s ease-out 0.4s both;">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-primary me-3">
+                        <i class="bi bi-box-arrow-in-right"></i> Login
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-person-plus"></i> Register
+                    </a>
                 </div>
             {% endif %}
         </div>
@@ -19,7 +23,7 @@
 
     <div class="row mt-4">
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
+            <div class="card h-100 home-card">
                 <div class="card-body">
                     <h5 class="card-title">SIP Calculator</h5>
                     <p class="card-text">Calculate your Systematic Investment Plan returns and plan your investments better.</p>
@@ -31,7 +35,7 @@
         </div>
 
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
+            <div class="card h-100 home-card">
                 <div class="card-body">
                     <h5 class="card-title">Expense Tracking</h5>
                     <p class="card-text">Track your daily expenses, set budgets, and get insights into your spending patterns.</p>
@@ -43,7 +47,7 @@
         </div>
 
         <div class="col-md-4 mb-4">
-            <div class="card h-100">
+            <div class="card h-100 home-card">
                 <div class="card-body">
                     <h5 class="card-title">Financial Goals</h5>
                     <p class="card-text">Set and track your financial goals with personalized savings plans.</p>
@@ -58,7 +62,7 @@
     {% if current_user.is_authenticated %}
         <div class="row mt-4">
             <div class="col-md-12">
-                <div class="card">
+                <div class="card market-data-container">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Market Overview</h5>
                         <form class="form-inline" action="{{ url_for('finance.add_to_watchlist') }}" method="post">
@@ -78,7 +82,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-6 mt-2">
                 <div class="card">
                     <div class="card-header">
                         <h5 class="card-title mb-0">AI Financial Advisor</h5>
@@ -86,6 +90,17 @@
                     <div class="card-body">
                         <p>Get personalized financial advice powered by AI.</p>
                         <a href="{{ url_for('finance.get_advice') }}" class="btn btn-primary">Get Advice</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mt-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">AI Finance Chatbot</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Have conversation with AI about your Financial situation</p>
+                        <a href="{{ url_for('finance.chat_page') }}" class="btn btn-primary">Chat Up</a>
                     </div>
                 </div>
             </div>

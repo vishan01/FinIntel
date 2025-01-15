@@ -14,7 +14,6 @@ class MarketDataService:
             # Get sp 50 data using yfinance
             sp = yf.Ticker("^GSPC")  # sp 50 symbol
             info = sp.info
-            print(info)
             price =info['open']
             previous_close = info.get('previousClose', price)
             change = price - previous_close
