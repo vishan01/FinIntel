@@ -1,7 +1,7 @@
 import google.generativeai as genai
 from datetime import datetime
 import markdown
-
+from functools import lru_cache
 from src.models import Expense, Budget, Goal
 from flask import current_app
 from datetime import datetime, timedelta
@@ -92,7 +92,7 @@ class FinancialService:
             'total_returns': round(total_returns, 2),
             'final_amount': round(amount, 2)
         }
-
+    @lru_cache(maxsize=1)
     def get_financial_advice(self, topic: str,user_id:int) -> dict:
         self.call(user_id)
         """Get AI-generated financial advice."""

@@ -218,14 +218,22 @@ def goals():
 @finance_bp.route('/advice')
 @login_required
 def get_advice():
-    topic = request.args.get('topic', 'personal finance basics')
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        try:
-            advice_response = financial_service.get_financial_advice(topic,current_user.id)
-            return jsonify(advice_response.get("html",""))
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
     return render_template('advice.html')
+
+@finance_bp.route('/advice_info/<info>',methods=['GET'])
+@login_required
+def get_advice_info(info):
+    topic=info
+    try:
+        advice_response = financial_service.get_financial_advice(topic,current_user.id)
+        return jsonify(advice_response.get("html",""))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@finance_bp.route('/chat-page')
+@login_required
+def chat_page():
+    return render_template('chat.html')
 
 @finance_bp.route('/chat')
 @login_required
@@ -236,7 +244,7 @@ def chat():
     
     try:
         response = financial_service.Chat(message, current_user.id)
-        return jsonify({'response': response.get("text","")})
+        return jsonify({'response': response.get("html","")})
     except Exception as e:
         print(f"Error in chat endpoint: {e}")
         return jsonify({'error': str(e)}), 500

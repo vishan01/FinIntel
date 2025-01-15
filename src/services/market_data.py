@@ -30,7 +30,6 @@ class MarketDataService:
             # Add user's stock data if logged in
             if current_user.is_authenticated and current_user.stock_tickers:
                 data['stocks'] = self.get_user_stocks()
-            print(data)
             return data
         except Exception as e:
             return {'error': str(e)}

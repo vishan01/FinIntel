@@ -342,9 +342,11 @@ function resetForm(form) {
 
 // Financial Advice
 async function getFinancialAdvice(topic) {
-    const response = await fetch(`/finance/advice?topic=${encodeURIComponent(topic)}`);
+    const response = await fetch(`/finance/advice_info/${topic}`);
+    
     const data = await response.json();
-    document.getElementById('advice-content').innerHTML = data.html;
+    console.log(data)
+    document.getElementById('advice-content').innerHTML = data;
 }
 
 // Edit expense
