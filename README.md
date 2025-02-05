@@ -96,7 +96,6 @@ FinIntel/
 │   ├── js/            # JavaScript files
 │   └── img/           # Images
 ├── templates/          # HTML templates
-└── tests/             # Test files
 ```
 
 ## Contributing 🤝
