@@ -110,10 +110,3 @@ FinIntel/
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments 🙏
-
-- Flask and its extensions
-- Bootstrap for the UI components
-- Plotly.js for data visualization
-- Google Gemini AI for intelligent insights
-- Alpha Vantage for market data
